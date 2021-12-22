@@ -22,7 +22,7 @@ static SKFileTypeImageLoader *sharedLoader = nil;
     [super dealloc];
 }
 
--(id) init {
+- (id)init {
     if (self=[super init]) {
         NSString *path = [[NSBundle mainBundle] pathForResource:
 		                  @"FileTypeIcons" ofType: @"plist"];
@@ -33,7 +33,8 @@ static SKFileTypeImageLoader *sharedLoader = nil;
     return self;
 }
 
--(NSString*) constructFilenameWithBasename:(NSString*) basename size:(unsigned int) size {
+- (NSString*) constructFilenameWithBasename:(NSString*) basename size:(unsigned int) size {
+    size = MAX(MIN(80, size), 80);
     NSString *sizeString = [NSString stringWithFormat:@"%d", size];
     return  [[[filenameFormat 
                             stringByReplacingOccurrencesOfString:@"{size}" withString:sizeString] 
@@ -66,18 +67,22 @@ static SKFileTypeImageLoader *sharedLoader = nil;
     
     NSString* imageName = [self constructFilenameWithBasename:basename size:size];
     
-    UIImage * image = [self loadImageWithName:imageName];
-    if (image ==nil) {
+    UIImage* image = [self loadImageWithName:imageName];
+    if (image == nil) {
         if ((basename=[[_config objectForKey:@"Synonyms"] objectForKey:basename])) {
             imageName = [self constructFilenameWithBasename:basename size:size];
             image = [self loadImageWithName:imageName];
         } else {
             NSLog(@"WARNING! Image %@ not found", imageName);
-            return [self imageForMimeType:@"unknown" size:size];
+            if (![mimeType isEqualToString:@"unknown"]) {
+                return [self imageForMimeType:@"unknown" size:size];
+            } else {
+                return nil;
+            }
         }
     }
+    
     return image;
-   
 }
 
 + (SKFileTypeImageLoader *) sharedLoader {
